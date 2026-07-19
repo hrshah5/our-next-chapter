@@ -56,53 +56,6 @@
 
     button { font: inherit; }
 
-    .music-toggle {
-      position: fixed;
-      top: clamp(1rem, 3vw, 1.75rem);
-      right: clamp(1rem, 3vw, 1.75rem);
-      z-index: 12;
-      display: inline-flex;
-      align-items: center;
-      gap: .55rem;
-      min-height: 2.8rem;
-      padding: .55rem .9rem .55rem .6rem;
-      color: var(--ivory);
-      font-size: .7rem;
-      font-weight: 800;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      background: rgba(17, 24, 39, .58);
-      border: 1px solid rgba(243, 223, 172, .28);
-      border-radius: 999px;
-      box-shadow: 0 .7rem 2rem rgba(0, 0, 0, .16);
-      backdrop-filter: blur(12px);
-      cursor: pointer;
-      transition: background .25s ease, border-color .25s ease, transform .25s ease;
-    }
-
-    .music-toggle:hover {
-      background: rgba(113, 59, 99, .78);
-      border-color: rgba(243, 223, 172, .65);
-      transform: translateY(-2px);
-    }
-
-    .music-toggle[aria-pressed="false"] { opacity: .68; }
-
-    .music-note {
-      display: grid;
-      width: 1.7rem;
-      aspect-ratio: 1;
-      place-items: center;
-      color: var(--midnight);
-      font-size: 1rem;
-      background: var(--champagne-light);
-      border-radius: 50%;
-    }
-
-    .music-toggle[aria-pressed="true"] .music-note {
-      animation: music-pulse 1.8s ease-in-out infinite;
-    }
-
     .ambient,
     .ambient::before,
     .ambient::after {
@@ -554,11 +507,6 @@
       to { transform: translate(-2rem, 2rem) rotate(12deg); }
     }
 
-    @keyframes music-pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(243, 223, 172, .1); }
-      50% { box-shadow: 0 0 0 .35rem rgba(243, 223, 172, .12); }
-    }
-
     @keyframes twinkle {
       0%, 100% { opacity: .2; transform: scale(.6) rotate(0); }
       50% { opacity: 1; transform: scale(1) rotate(45deg); }
@@ -596,8 +544,6 @@
       .count-note { bottom: -4.3rem; }
       .announcement h2 { font-size: clamp(4.2rem, 19vw, 7rem); }
       .spark-three { display: none; }
-      .music-toggle { padding-right: .6rem; }
-      .music-toggle span:last-child { display: none; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -628,17 +574,6 @@
     src="https://assets.mixkit.co/music/599/599.mp3"
   ></audio>
 
-  <button
-    class="music-toggle"
-    id="music-toggle"
-    type="button"
-    aria-label="Music is ready"
-    aria-pressed="true"
-  >
-    <span class="music-note" aria-hidden="true">♪</span>
-    <span id="music-label">Music ready</span>
-  </button>
-
   <div class="ambient" aria-hidden="true"></div>
   <i class="spark spark-one" aria-hidden="true"></i>
   <i class="spark spark-two" aria-hidden="true"></i>
@@ -648,10 +583,10 @@
     <section class="card" id="card" data-state="intro" aria-labelledby="title">
       <div class="intro">
         <p class="kicker">Strictly between us</p>
-        <h1 id="title">A little secret <em>is waiting.</em></h1>
+        <h1 id="title">Our next <em>venture</em></h1>
         <p class="hint">Some moments arrive quietly—and then change everything. This one is just for you.</p>
         <button class="primary" id="start" type="button">
-          Open the surprise
+          Click here for details
           <span aria-hidden="true">→</span>
         </button>
         <p class="whisper">Music begins when you open it. Butterflies are not optional.</p>
@@ -696,13 +631,8 @@
     const reveal = document.querySelector("#reveal");
     const replayButton = document.querySelector("#replay");
     const backgroundMusic = document.querySelector("#background-music");
-    const musicToggle = document.querySelector("#music-toggle");
-    const musicLabel = document.querySelector("#music-label");
     let timer;
     let volumeFrame;
-    let experienceStarted = false;
-    let musicEnabled = true;
-    let musicBlocked = false;
 
     backgroundMusic.volume = .2;
 
@@ -733,25 +663,6 @@
       countDisplay.classList.add("pop");
     }
 
-    function updateMusicControl() {
-      musicToggle.setAttribute("aria-pressed", String(musicEnabled));
-      if (!musicEnabled) {
-        musicToggle.setAttribute("aria-label", "Turn music on");
-        musicLabel.textContent = "Music off";
-        return;
-      }
-
-      if (musicBlocked) {
-        musicToggle.setAttribute("aria-label", "Tap to start music");
-        musicLabel.textContent = "Tap for music";
-        return;
-      }
-
-      const isPlaying = !backgroundMusic.paused;
-      musicToggle.setAttribute("aria-label", isPlaying ? "Turn music off" : "Music is ready");
-      musicLabel.textContent = isPlaying ? "Music playing" : "Music ready";
-    }
-
     function fadeMusicTo(target, duration = 900) {
       window.cancelAnimationFrame(volumeFrame);
       const initialVolume = backgroundMusic.volume;
@@ -767,42 +678,16 @@
     }
 
     async function playMusic(targetVolume = .56) {
-      if (!musicEnabled) return;
       backgroundMusic.volume = Math.max(backgroundMusic.volume, .2);
 
       try {
         await backgroundMusic.play();
-        musicBlocked = false;
-        updateMusicControl();
         fadeMusicTo(targetVolume, 650);
-      } catch {
-        musicBlocked = true;
-        updateMusicControl();
-      }
-    }
-
-    function toggleMusic() {
-      if (musicBlocked) {
-        musicBlocked = false;
-        playMusic(reveal.classList.contains("show") ? .66 : .56);
-        return;
-      }
-
-      musicEnabled = !musicEnabled;
-      updateMusicControl();
-
-      if (!musicEnabled) {
-        backgroundMusic.pause();
-        updateMusicControl();
-        return;
-      }
-
-      if (experienceStarted) playMusic(reveal.classList.contains("show") ? .66 : .56);
+      } catch {}
     }
 
     function beginCountdown() {
       clearInterval(timer);
-      experienceStarted = true;
       startButton.disabled = true;
       card.dataset.state = "counting";
       countdown.setAttribute("aria-hidden", "false");
@@ -820,20 +705,17 @@
         clearInterval(timer);
         flash.classList.add("run");
         reveal.classList.add("show");
-        if (musicEnabled) fadeMusicTo(.66, 1200);
+        if (!backgroundMusic.paused) fadeMusicTo(.66, 1200);
         window.setTimeout(() => replayButton.focus(), 1550);
       }, 1000);
     }
 
     function reset() {
       clearInterval(timer);
-      experienceStarted = false;
       window.cancelAnimationFrame(volumeFrame);
       backgroundMusic.pause();
       backgroundMusic.currentTime = 0;
       backgroundMusic.volume = .2;
-      musicBlocked = false;
-      updateMusicControl();
       reveal.classList.remove("show");
       flash.classList.remove("run");
       card.dataset.state = "intro";
@@ -846,7 +728,6 @@
 
     startButton.addEventListener("click", beginCountdown);
     replayButton.addEventListener("click", reset);
-    musicToggle.addEventListener("click", toggleMusic);
   </script>
 </body>
 </html>
