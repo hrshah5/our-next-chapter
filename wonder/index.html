@@ -632,11 +632,11 @@
     class="music-toggle"
     id="music-toggle"
     type="button"
-    aria-label="Turn music off"
+    aria-label="Music is ready"
     aria-pressed="true"
   >
     <span class="music-note" aria-hidden="true">♪</span>
-    <span id="music-label">Music on</span>
+    <span id="music-label">Music ready</span>
   </button>
 
   <div class="ambient" aria-hidden="true"></div>
@@ -654,7 +654,7 @@
           Open the surprise
           <span aria-hidden="true">→</span>
         </button>
-        <p class="whisper">Sound on is optional. Butterflies are not.</p>
+        <p class="whisper">Music begins when you open it. Butterflies are not optional.</p>
       </div>
 
       <div class="countdown" aria-hidden="true" id="countdown">
@@ -702,8 +702,9 @@
     let volumeFrame;
     let experienceStarted = false;
     let musicEnabled = true;
+    let musicBlocked = false;
 
-    backgroundMusic.volume = 0;
+    backgroundMusic.volume = .2;
 
     document.querySelector("#to-names").textContent = `For ${data.names}`;
     document.querySelector("#title-first").textContent = data.titleFirst;
@@ -734,8 +735,21 @@
 
     function updateMusicControl() {
       musicToggle.setAttribute("aria-pressed", String(musicEnabled));
-      musicToggle.setAttribute("aria-label", musicEnabled ? "Turn music off" : "Turn music on");
-      musicLabel.textContent = musicEnabled ? "Music on" : "Music off";
+      if (!musicEnabled) {
+        musicToggle.setAttribute("aria-label", "Turn music on");
+        musicLabel.textContent = "Music off";
+        return;
+      }
+
+      if (musicBlocked) {
+        musicToggle.setAttribute("aria-label", "Tap to start music");
+        musicLabel.textContent = "Tap for music";
+        return;
+      }
+
+      const isPlaying = !backgroundMusic.paused;
+      musicToggle.setAttribute("aria-label", isPlaying ? "Turn music off" : "Music is ready");
+      musicLabel.textContent = isPlaying ? "Music playing" : "Music ready";
     }
 
     function fadeMusicTo(target, duration = 900) {
@@ -752,27 +766,38 @@
       volumeFrame = window.requestAnimationFrame(step);
     }
 
-    async function playMusic(targetVolume = .24) {
+    async function playMusic(targetVolume = .56) {
       if (!musicEnabled) return;
+      backgroundMusic.volume = Math.max(backgroundMusic.volume, .2);
+
       try {
         await backgroundMusic.play();
-        fadeMusicTo(targetVolume);
+        musicBlocked = false;
+        updateMusicControl();
+        fadeMusicTo(targetVolume, 650);
       } catch {
-        musicEnabled = false;
+        musicBlocked = true;
         updateMusicControl();
       }
     }
 
     function toggleMusic() {
+      if (musicBlocked) {
+        musicBlocked = false;
+        playMusic(reveal.classList.contains("show") ? .66 : .56);
+        return;
+      }
+
       musicEnabled = !musicEnabled;
       updateMusicControl();
 
       if (!musicEnabled) {
         backgroundMusic.pause();
+        updateMusicControl();
         return;
       }
 
-      if (experienceStarted) playMusic(reveal.classList.contains("show") ? .34 : .24);
+      if (experienceStarted) playMusic(reveal.classList.contains("show") ? .66 : .56);
     }
 
     function beginCountdown() {
@@ -795,7 +820,7 @@
         clearInterval(timer);
         flash.classList.add("run");
         reveal.classList.add("show");
-        if (musicEnabled) fadeMusicTo(.34, 1200);
+        if (musicEnabled) fadeMusicTo(.66, 1200);
         window.setTimeout(() => replayButton.focus(), 1550);
       }, 1000);
     }
@@ -806,7 +831,9 @@
       window.cancelAnimationFrame(volumeFrame);
       backgroundMusic.pause();
       backgroundMusic.currentTime = 0;
-      backgroundMusic.volume = 0;
+      backgroundMusic.volume = .2;
+      musicBlocked = false;
+      updateMusicControl();
       reveal.classList.remove("show");
       flash.classList.remove("run");
       card.dataset.state = "intro";
