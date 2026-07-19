@@ -25,3 +25,10 @@ node scripts/build-pages.mjs
 ```
 
 The generated route directories are the static pages served by GitHub Pages.
+
+## Music
+
+The recipient experiences use **Possible Dreams** by Eugenio Mininni, provided
+by Mixkit under the [Mixkit Stock Music Free
+License](https://mixkit.co/license/#musicFree). Mixkit permits use in websites
+and does not require attribution.
