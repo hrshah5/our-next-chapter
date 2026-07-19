@@ -568,10 +568,9 @@
 
   <audio
     id="background-music"
-    loop
     playsinline
     preload="metadata"
-    src="https://assets.mixkit.co/music/599/599.mp3"
+    src="https://assets.mixkit.co/active_storage/sfx/566/566-preview.mp3"
   ></audio>
 
   <div class="ambient" aria-hidden="true"></div>
@@ -589,7 +588,6 @@
           Click here for details
           <span aria-hidden="true">→</span>
         </button>
-        <p class="whisper">Music begins when you open it. Butterflies are not optional.</p>
       </div>
 
       <div class="countdown" aria-hidden="true" id="countdown">
@@ -632,9 +630,8 @@
     const replayButton = document.querySelector("#replay");
     const backgroundMusic = document.querySelector("#background-music");
     let timer;
-    let volumeFrame;
 
-    backgroundMusic.volume = .2;
+    backgroundMusic.volume = .72;
 
     document.querySelector("#to-names").textContent = `For ${data.names}`;
     document.querySelector("#title-first").textContent = data.titleFirst;
@@ -657,32 +654,16 @@
 
     function showNumber(number) {
       countDisplay.textContent = number;
-      countShell.style.setProperty("--progress", `${(11 - number) * 36}deg`);
+      countShell.style.setProperty("--progress", `${(6 - number) * 60}deg`);
       countDisplay.classList.remove("pop");
       void countDisplay.offsetWidth;
       countDisplay.classList.add("pop");
     }
 
-    function fadeMusicTo(target, duration = 900) {
-      window.cancelAnimationFrame(volumeFrame);
-      const initialVolume = backgroundMusic.volume;
-      const startedAt = performance.now();
-
-      function step(now) {
-        const progress = Math.min((now - startedAt) / duration, 1);
-        backgroundMusic.volume = initialVolume + (target - initialVolume) * progress;
-        if (progress < 1) volumeFrame = window.requestAnimationFrame(step);
-      }
-
-      volumeFrame = window.requestAnimationFrame(step);
-    }
-
-    async function playMusic(targetVolume = .56) {
-      backgroundMusic.volume = Math.max(backgroundMusic.volume, .2);
-
+    async function playMusic() {
       try {
+        backgroundMusic.currentTime = 0;
         await backgroundMusic.play();
-        fadeMusicTo(targetVolume, 650);
       } catch {}
     }
 
@@ -692,30 +673,26 @@
       card.dataset.state = "counting";
       countdown.setAttribute("aria-hidden", "false");
       playMusic();
-      let number = 10;
+      let number = 5;
       showNumber(number);
 
       timer = setInterval(() => {
         number -= 1;
-        if (number > 0) {
-          showNumber(number);
-          return;
-        }
+        showNumber(number);
+        if (number > 0) return;
 
         clearInterval(timer);
         flash.classList.add("run");
         reveal.classList.add("show");
-        if (!backgroundMusic.paused) fadeMusicTo(.66, 1200);
         window.setTimeout(() => replayButton.focus(), 1550);
       }, 1000);
     }
 
     function reset() {
       clearInterval(timer);
-      window.cancelAnimationFrame(volumeFrame);
       backgroundMusic.pause();
       backgroundMusic.currentTime = 0;
-      backgroundMusic.volume = .2;
+      backgroundMusic.volume = .72;
       reveal.classList.remove("show");
       flash.classList.remove("run");
       card.dataset.state = "intro";
