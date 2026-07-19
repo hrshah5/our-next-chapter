@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="A private little moment, shared by invitation.">
+  <title>A Little Something for You</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --midnight: #111827;
+      --ivory: #f9f4e8;
+      --champagne: #f3dfac;
+      --plum: #713b63;
+      --sans: Inter, "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100svh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: 1.25rem;
+      color: var(--ivory);
+      text-align: center;
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at 15% 15%, rgba(113, 59, 99, .55), transparent 30rem),
+        radial-gradient(circle at 85% 82%, rgba(46, 88, 92, .45), transparent 30rem),
+        var(--midnight);
+    }
+
+    main {
+      position: relative;
+      width: min(92vw, 46rem);
+      padding: clamp(3rem, 9vw, 6rem);
+      color: #252b35;
+      background: #f9f4e8;
+      border: 1px solid rgba(243, 223, 172, .8);
+      border-radius: clamp(1.5rem, 4vw, 3rem);
+      box-shadow: 0 2.5rem 8rem rgba(0, 0, 0, .35);
+    }
+
+    main::before,
+    main::after {
+      content: "";
+      position: absolute;
+      width: 5rem;
+      aspect-ratio: 1;
+      border-color: rgba(113, 59, 99, .35);
+    }
+
+    main::before {
+      top: 1.4rem;
+      left: 1.4rem;
+      border-top: 1px solid;
+      border-left: 1px solid;
+      border-radius: 1rem 0 0;
+    }
+
+    main::after {
+      right: 1.4rem;
+      bottom: 1.4rem;
+      border-right: 1px solid;
+      border-bottom: 1px solid;
+      border-radius: 0 0 1rem;
+    }
+
+    p:first-child {
+      margin: 0 0 1.4rem;
+      color: var(--plum);
+      font-size: .7rem;
+      font-weight: 800;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 10ch;
+      margin: 0 auto;
+      font: 500 clamp(3rem, 9vw, 6rem)/.9 var(--serif);
+      letter-spacing: -.055em;
+    }
+
+    h1 em {
+      display: block;
+      color: var(--plum);
+      font-weight: 400;
+    }
+
+    p:last-child {
+      max-width: 28rem;
+      margin: 1.8rem auto 0;
+      color: #66645f;
+      line-height: 1.65;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p>Shared by invitation</p>
+    <h1>A little something <em>just for you.</em></h1>
+    <p>Please open the personal link that was shared with you. The best surprises are the ones worth waiting for.</p>
+  </main>
+</body>
+</html>
