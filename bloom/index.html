@@ -56,6 +56,53 @@
 
     button { font: inherit; }
 
+    .music-toggle {
+      position: fixed;
+      top: clamp(1rem, 3vw, 1.75rem);
+      right: clamp(1rem, 3vw, 1.75rem);
+      z-index: 12;
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
+      min-height: 2.8rem;
+      padding: .55rem .9rem .55rem .6rem;
+      color: var(--ivory);
+      font-size: .7rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: rgba(17, 24, 39, .58);
+      border: 1px solid rgba(243, 223, 172, .28);
+      border-radius: 999px;
+      box-shadow: 0 .7rem 2rem rgba(0, 0, 0, .16);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      transition: background .25s ease, border-color .25s ease, transform .25s ease;
+    }
+
+    .music-toggle:hover {
+      background: rgba(113, 59, 99, .78);
+      border-color: rgba(243, 223, 172, .65);
+      transform: translateY(-2px);
+    }
+
+    .music-toggle[aria-pressed="false"] { opacity: .68; }
+
+    .music-note {
+      display: grid;
+      width: 1.7rem;
+      aspect-ratio: 1;
+      place-items: center;
+      color: var(--midnight);
+      font-size: 1rem;
+      background: var(--champagne-light);
+      border-radius: 50%;
+    }
+
+    .music-toggle[aria-pressed="true"] .music-note {
+      animation: music-pulse 1.8s ease-in-out infinite;
+    }
+
     .ambient,
     .ambient::before,
     .ambient::after {
@@ -507,6 +554,11 @@
       to { transform: translate(-2rem, 2rem) rotate(12deg); }
     }
 
+    @keyframes music-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(243, 223, 172, .1); }
+      50% { box-shadow: 0 0 0 .35rem rgba(243, 223, 172, .12); }
+    }
+
     @keyframes twinkle {
       0%, 100% { opacity: .2; transform: scale(.6) rotate(0); }
       50% { opacity: 1; transform: scale(1) rotate(45deg); }
@@ -544,6 +596,8 @@
       .count-note { bottom: -4.3rem; }
       .announcement h2 { font-size: clamp(4.2rem, 19vw, 7rem); }
       .spark-three { display: none; }
+      .music-toggle { padding-right: .6rem; }
+      .music-toggle span:last-child { display: none; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -565,6 +619,25 @@
     data-title-second="Dadi"
     data-congratulations="Congratulations — you’ve been promoted."
   ></div>
+
+  <audio
+    id="background-music"
+    loop
+    playsinline
+    preload="metadata"
+    src="https://assets.mixkit.co/music/599/599.mp3"
+  ></audio>
+
+  <button
+    class="music-toggle"
+    id="music-toggle"
+    type="button"
+    aria-label="Turn music off"
+    aria-pressed="true"
+  >
+    <span class="music-note" aria-hidden="true">♪</span>
+    <span id="music-label">Music on</span>
+  </button>
 
   <div class="ambient" aria-hidden="true"></div>
   <i class="spark spark-one" aria-hidden="true"></i>
@@ -622,7 +695,15 @@
     const flash = document.querySelector("#flash");
     const reveal = document.querySelector("#reveal");
     const replayButton = document.querySelector("#replay");
+    const backgroundMusic = document.querySelector("#background-music");
+    const musicToggle = document.querySelector("#music-toggle");
+    const musicLabel = document.querySelector("#music-label");
     let timer;
+    let volumeFrame;
+    let experienceStarted = false;
+    let musicEnabled = true;
+
+    backgroundMusic.volume = 0;
 
     document.querySelector("#to-names").textContent = `For ${data.names}`;
     document.querySelector("#title-first").textContent = data.titleFirst;
@@ -651,11 +732,56 @@
       countDisplay.classList.add("pop");
     }
 
+    function updateMusicControl() {
+      musicToggle.setAttribute("aria-pressed", String(musicEnabled));
+      musicToggle.setAttribute("aria-label", musicEnabled ? "Turn music off" : "Turn music on");
+      musicLabel.textContent = musicEnabled ? "Music on" : "Music off";
+    }
+
+    function fadeMusicTo(target, duration = 900) {
+      window.cancelAnimationFrame(volumeFrame);
+      const initialVolume = backgroundMusic.volume;
+      const startedAt = performance.now();
+
+      function step(now) {
+        const progress = Math.min((now - startedAt) / duration, 1);
+        backgroundMusic.volume = initialVolume + (target - initialVolume) * progress;
+        if (progress < 1) volumeFrame = window.requestAnimationFrame(step);
+      }
+
+      volumeFrame = window.requestAnimationFrame(step);
+    }
+
+    async function playMusic(targetVolume = .24) {
+      if (!musicEnabled) return;
+      try {
+        await backgroundMusic.play();
+        fadeMusicTo(targetVolume);
+      } catch {
+        musicEnabled = false;
+        updateMusicControl();
+      }
+    }
+
+    function toggleMusic() {
+      musicEnabled = !musicEnabled;
+      updateMusicControl();
+
+      if (!musicEnabled) {
+        backgroundMusic.pause();
+        return;
+      }
+
+      if (experienceStarted) playMusic(reveal.classList.contains("show") ? .34 : .24);
+    }
+
     function beginCountdown() {
       clearInterval(timer);
+      experienceStarted = true;
       startButton.disabled = true;
       card.dataset.state = "counting";
       countdown.setAttribute("aria-hidden", "false");
+      playMusic();
       let number = 10;
       showNumber(number);
 
@@ -669,12 +795,18 @@
         clearInterval(timer);
         flash.classList.add("run");
         reveal.classList.add("show");
+        if (musicEnabled) fadeMusicTo(.34, 1200);
         window.setTimeout(() => replayButton.focus(), 1550);
       }, 1000);
     }
 
     function reset() {
       clearInterval(timer);
+      experienceStarted = false;
+      window.cancelAnimationFrame(volumeFrame);
+      backgroundMusic.pause();
+      backgroundMusic.currentTime = 0;
+      backgroundMusic.volume = 0;
       reveal.classList.remove("show");
       flash.classList.remove("run");
       card.dataset.state = "intro";
@@ -687,6 +819,7 @@
 
     startButton.addEventListener("click", beginCountdown);
     replayButton.addEventListener("click", reset);
+    musicToggle.addEventListener("click", toggleMusic);
   </script>
 </body>
 </html>
